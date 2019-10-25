@@ -97,8 +97,8 @@ grep \
 	> $outDir/Intermediate-files/$ncRNA_basename 
 
 ### Create new tRNA and ncRNA GTFs and FASTAs
-python FASTA-to-GTF.py tRNA $in_tRNAs $tRNA_newname_FA $tRNA_newname_GTF &    
-python GFF3-to-FASTA.py $outDir/Intermediate-files/$ncRNA_basename $in_genome $ncRNA_newname_FA $ncRNA_newname_GTF &
+python bin/FASTA-to-GTF.py tRNA $in_tRNAs $tRNA_newname_FA $tRNA_newname_GTF &    
+python bin/GFF3-to-FASTA.py $outDir/Intermediate-files/${ncRNA_basename} $in_genome $ncRNA_newname_FA $ncRNA_newname_GTF &
 
 wait
 
@@ -110,8 +110,8 @@ cd-hit-est -i $tRNA_newname_FA -o "${tRNA_basename}_relative_cdhit.fa" -c 0.995
 cat "${ncRNA_basename}_relative_cdhit.fa" "${tRNA_basename}_relative_cdhit.fa" > $outDir/"${species}_tRNAs-and-ncRNAs_relative_cdhit.fa" &
 
 ### Run Reduce-GTF
-python Reduce-GTF.py "${ncRNA_basename}_relative_cdhit.fa" $ncRNA_newname_GTF $outDir/"${species}_ncRNAs_relative_cdhit.gtf" &
-python Reduce-GTF.py "${tRNA_basename}_relative_cdhit.fa" $tRNA_newname_GTF $outDir/"${species}_tRNAs_relative_cdhit.gtf" &
+python bin/Reduce-GTF.py "${ncRNA_basename}_relative_cdhit.fa" $ncRNA_newname_GTF $outDir/"${species}_ncRNAs_relative_cdhit.gtf" &
+python bin/Reduce-GTF.py "${tRNA_basename}_relative_cdhit.fa" $tRNA_newname_GTF $outDir/"${species}_tRNAs_relative_cdhit.gtf" &
 
 wait
 
@@ -121,7 +121,7 @@ mv "${ncRNA_basename}_"* $outDir/Intermediate-files/
 ### Find tRNA introns for removal
 awk '{print $1}' $outDir/"${species}_tRNAs_relative_cdhit.gtf" | uniq -d > $outDir/Intermediate-files/"${species}_tRNAs-with-introns.txt"
 join <(sort $outDir/Intermediate-files/"${species}_tRNAs-with-introns.txt") <(sort $outDir/"${species}_tRNAs_relative_cdhit.gtf") > $outDir/Intermediate-files/"${species}_Intron-containing-tRNAs.gtf"
-python Remove-intron.py $outDir/Intermediate-files/"${species}_Intron-containing-tRNAs.gtf" $outDir/"${species}_tRNA-introns-for-removal.tsv"
+python bin/Remove-intron.py $outDir/Intermediate-files/"${species}_Intron-containing-tRNAs.gtf" $outDir/"${species}_tRNA-introns-for-removal.tsv"
 
 ### Get names of all tRNAs and ncRNAs
 grep '>' $outDir/"${species}_tRNAs-and-ncRNAs_relative_cdhit.fa" | \
@@ -130,7 +130,7 @@ grep '>' $outDir/"${species}_tRNAs-and-ncRNAs_relative_cdhit.fa" | \
 	> $outDir/"${species}_all-ncRNAs.txt"
 
 ### Get lengths of all tRNAs
-python tRNA-lengths.py $outDir/"${species}_tRNAs_relative_cdhit.gtf" $outDir/"${species}_tRNA-lengths.txt"
+python bin/tRNA-lengths.py $outDir/"${species}_tRNAs_relative_cdhit.gtf" $outDir/"${species}_tRNA-lengths.txt"
 
 echo "Finished"
 

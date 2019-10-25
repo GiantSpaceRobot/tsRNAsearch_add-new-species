@@ -11,7 +11,7 @@ wget -q http://gtrnadb.ucsc.edu/genomes/eukaryota/Mmusc10/mm10-tRNAs.fa .
 # Gunzip files
 gunzip *gtf.gz
 
-# Run as follows:
+# Run as follows (replace the word mouse with your species):
 Usage: $0 -s mouse -T mm10-tRNAs.fa -S Mus_musculus.GRCm38.95.gtf -G Mus_musculus.GRCm38.dna.primary_assembly.fa.gz -o OutputDirectory
 ```
 Move files to tsRNAsearch directory:
@@ -21,6 +21,12 @@ mv OutputDirectory/*tRNA-lengths.txt .../tsRNAsearch/additional-files/
 mv OutputDirectory/*all-ncRNAs.txt .../tsRNAsearch/additional-files/
 mv OutputDirectory/*tRNAs-and-ncRNAs_relative_cdhit.fa .../tsRNAsearch/DBs/
 ```
+Add new species to tsRNAsearch (replace the word *mouse* with your species:
+```
+mkdir -p DBs/species_index/mouse-ncRNAs
+STAR --runThreadN 1 --runMode genomeGenerate --genomeDir DBs/species_index/mouse-ncRNAs/ --genomeFastaFiles DBs/mouse_tRNAs-and-ncRNAs_relative_cdhit.fa
+```
+Add a bit of code to the tsRNAsearch pipeline.
 
 ## More Information
 Options:

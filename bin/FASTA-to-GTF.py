@@ -11,22 +11,34 @@ out_file = open(sys.argv[3], "w")
 gtf_file = open(sys.argv[4], "w")
 for fasta in fasta_sequences:
     name, sequence, description = fasta.id, str(fasta.seq), str(fasta.description)
-    tRNA = (description.split("(")[1]).split(")")[0]
+    namesplit = name.split("-")
+    tRNAname = namesplit[1]
+    codon = namesplit[2]
+    tRNA = (description.split("(")[1]).split(")")[0] # Get tRNA name, e.g. 'tRNAscan SE chr13.trna34-AlaAGC'
+    #tRNA = "chr" + tRNA.split("chr")[1] # Remove tRNAscan string if present
+    tRNA = tRNA.split(" ")[-1] # Remove tRNAscan string if present, e.g. 'chr13.trna34-AlaAGC'
+    tRNA = tRNA.split("-")[0] # Remove suffix, e.g. 'chr13.trna34'
+    tRNA = '%s-%s%s' % (tRNA, tRNAname, codon) # Rebuild suffix, e.g. 'chr13.trna34-AlaAGC'   # Necessary for awkward/inconsistent annotations
     long_line = 'gene_id "%s"; transcript_id "%s";' % (tRNA, tRNA)
-    strand = (description.split("(")[2]).split(")")[0]
+    #strand = (description.split("(")[2]).split(")")[0]
     #upper = 0
     lower = 0
     count = 0
     total = ""
     #exon1 = ""
     #intron = ""
-    
-    if strand == "+":
+    if "(+)" in description: # Determine strand that tRNA is on
+        strand = "+"
         sequence = sequence + "CCA"
-    elif strand == "-":
-        sequence = "ACC" + sequence
     else:
-        print ("Error: ", tRNA, strand)
+        strand = "-"
+        sequence = "ACC" + sequence
+    #if strand == "+":
+    #    sequence = sequence + "CCA"
+    #elif strand == "-":
+    #    sequence = "ACC" + sequence
+    #else:
+    #    print ("Error: ", tRNA, strand)
     
     if sum(1 for c in sequence if c.islower()) > 5: # If the sum total of lowercase in a sequence is greater than 5, check for intron
         for i in sequence:
