@@ -25,7 +25,8 @@ for eachline in ReaderM:
             if tRNA in line:
                 #if tRNA == "chr9.tRNA4-ArgTCT":
                 #    print "Yes, %s and %s" % (tRNA, line)
-                outputGTF.write(line + "\n")
+                newline = line.replace("\tgene\t", "\texon\t")
+                outputGTF.write(newline + "\n")
                 #print "Yes, %s and %s" % (tRNA, line)
 
 outputGTF.close()

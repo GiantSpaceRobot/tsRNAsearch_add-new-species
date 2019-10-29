@@ -20,13 +20,13 @@ mv OutputDirectory/*.gtf .../tsRNAsearch/DBs/
 mv OutputDirectory/*tRNA-lengths.txt .../tsRNAsearch/additional-files/
 mv OutputDirectory/*all-ncRNAs.txt .../tsRNAsearch/additional-files/
 mv OutputDirectory/*tRNAs-and-ncRNAs_relative_cdhit.fa .../tsRNAsearch/DBs/
+mv OutputDirectory/*.count .../tsRNAsearch/additional-files/
 ```
 Add new species to tsRNAsearch (replace the word *mouse* with your species:
 ```
 mkdir -p DBs/species_index/mouse-ncRNAs
 STAR --runThreadN 1 --runMode genomeGenerate --genomeDir DBs/species_index/mouse-ncRNAs/ --genomeFastaFiles DBs/mouse_tRNAs-and-ncRNAs_relative_cdhit.fa
 ```
-Add a bit of code to the tsRNAsearch pipeline.
 
 ## More Information
 Options:
