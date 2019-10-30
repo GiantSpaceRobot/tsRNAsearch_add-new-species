@@ -126,12 +126,12 @@ cd-hit-est -i $tRNA_newname_FA -o "${tRNA_basename}_relative_cdhit.fa" -c 0.995
 cat "${ncRNA_basename}_relative_cdhit.fa" "${tRNA_basename}_relative_cdhit.fa" > $outDir/"${species}_tRNAs-and-ncRNAs_relative_cdhit.fa" &
 
 ### Run Reduce-GTF
-python bin/Reduce-GTF.py "${ncRNA_basename}_relative_cdhit.fa" $ncRNA_newname_GTF $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" &
-sed 's/gene_type/gene_biotype/g' $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" > $outDir/"${species}_ncRNAs_relative_cdhit.gtf" # Make sure ncRNA type is defined using gene_biotype
+python bin/Reduce-GTF.py "${ncRNA_basename}_relative_cdhit.fa" $ncRNA_newname_GTF $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" & 
 python bin/Reduce-GTF.py "${tRNA_basename}_relative_cdhit.fa" $tRNA_newname_GTF $outDir/"${species}_tRNAs_relative_cdhit.gtf" &
 
 wait
 
+sed 's/gene_type/gene_biotype/g' $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" > $outDir/"${species}_ncRNAs_relative_cdhit.gtf" & # Make sure ncRNA type is defined using gene_biotype
 mv "${tRNA_basename}_"* $outDir/Intermediate-files/
 mv "${ncRNA_basename}_"* $outDir/Intermediate-files/
 
