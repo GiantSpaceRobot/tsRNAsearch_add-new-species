@@ -12,15 +12,15 @@ wget -q http://gtrnadb.ucsc.edu/genomes/eukaryota/Mmusc10/mm10-tRNAs.fa .
 gunzip *gtf.gz
 
 # Run as follows (replace the word mouse with your species):
-Usage: $0 -s mouse -T mm10-tRNAs.fa -S Mus_musculus.GRCm38.95.gtf -G Mus_musculus.GRCm38.dna.primary_assembly.fa.gz -o OutputDirectory
+Usage: ./Add-new-species-to-tsRNAsearch.sh -s mouse -T mm10-tRNAs.fa -S Mus_musculus.GRCm38.95.gtf -G Mus_musculus.GRCm38.dna.primary_assembly.fa -o OutputDirectory
 ```
 Move files to tsRNAsearch directory:
 ```
-mv OutputDirectory/*.gtf .../tsRNAsearch/DBs/
-mv OutputDirectory/*tRNA-lengths.txt .../tsRNAsearch/additional-files/
-mv OutputDirectory/*all-ncRNAs.txt .../tsRNAsearch/additional-files/
-mv OutputDirectory/*tRNAs-and-ncRNAs_relative_cdhit.fa .../tsRNAsearch/DBs/
-mv OutputDirectory/*.count .../tsRNAsearch/additional-files/
+mv OutputDirectory/*.gtf /path/to/tsRNAsearch/DBs/
+mv OutputDirectory/*tRNA-lengths.txt /path/to/tsRNAsearch/additional-files/
+mv OutputDirectory/*all-ncRNAs.txt /path/to/tsRNAsearch/additional-files/
+mv OutputDirectory/*tRNAs-and-ncRNAs_relative_cdhit.fa /path/to/tsRNAsearch/DBs/
+mv OutputDirectory/*.count /path/to/tsRNAsearch/additional-files/
 ```
 Add new species to tsRNAsearch (replace the word *mouse* with your species:
 ```
