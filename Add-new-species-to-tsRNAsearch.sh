@@ -154,5 +154,10 @@ grep -iv tRNA $outDir/Intermediate-files/"${species}_all-ncRNAs.count" > $outDir
 ### Get lengths of all tRNAs
 python bin/tRNA-lengths.py $outDir/"${species}_tRNAs_relative_cdhit.gtf" $outDir/"${species}_tRNA-lengths.txt"
 
+echo "ncRNAs in input: "$(grep -c '>' $outDir/Intermediate-files/$ncRNA_newname_FA)
+echo "ncRNAs in output: "$(grep -c '>' $outDir/Intermediate-files/${ncRNA_basename}_relative_cdhit.fa)
+echo "tRNAs in input: "$(grep -c '>' $outDir/Intermediate-files/$tRNA_newname_FA)
+echo "tRNAs in output: "$(grep -c '>' $outDir/Intermediate-files/${tRNA_basename}_relative_cdhit.fa)
+
 echo "Finished"
 

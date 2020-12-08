@@ -39,7 +39,7 @@ Options:
 * -o *Output directory for the new GTFs/FASTA files*
 
 ## Contributors
-* Paul Donovan, PhD
+* Paul Donovan, PhD (pauldonovandonegal@gmail.com)
 
 ## License
 This project is licensed under the MIT License.

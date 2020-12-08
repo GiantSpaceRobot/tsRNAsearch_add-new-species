@@ -32,7 +32,9 @@ for fasta in fasta_sequences:
         sequence = sequence + "CCA"
     else:
         strand = "-"
-        sequence = "ACC" + sequence
+        sequence = sequence + "CCA" # GtRNAdb tRNA sequences are all in the same orientation
+        #sequence = "ACC" + sequence
+        
     #if strand == "+":
     #    sequence = sequence + "CCA"
     #elif strand == "-":
