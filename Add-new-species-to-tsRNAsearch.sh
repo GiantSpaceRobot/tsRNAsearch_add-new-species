@@ -122,7 +122,17 @@ python bin/GFF3-to-FASTA.py $outDir/Intermediate-files/ncRNAs.gtf $in_genome $ou
 
 wait
 
+### Add up- and downstream nucleotides to tRNAs
+# Nuclear tRNAs
 python bin/tRNA-GTF-to-FASTA.py $outDir/Intermediate-files/tRNA_newname_absolute.gtf $in_genome $outDir/Intermediate-files/tRNA_intermediate.fa $outDir/Intermediate-files/tRNA_intermediate_relative.gtf 
+# Mitochondrial tRNAs
+python bin/tRNA-GTF-to-FASTA.py $outDir/Intermediate-files/Mt_tRNAs.gtf $in_genome $outDir/Intermediate-files/Mt-tRNA_intermediate.fa $outDir/Intermediate-files/Mt-tRNA_intermediate_relative.gtf 
+
+### Combine tRNA files
+cat $outDir/Intermediate-files/tRNA_intermediate.fa $outDir/Intermediate-files/Mt-tRNA_intermediate.fa \
+	> $outDir/Intermediate-files/All-tRNAs_intermediate.fa
+cat $outDir/Intermediate-files/tRNA_intermediate_relative.gtf $outDir/Intermediate-files/Mt-tRNA_intermediate_relative.gtf \
+	> $outDir/Intermediate-files/All-tRNAs_intermediate_relative.gtf
 
 ### Run cd-hit using similarity cut-off of 99.5%
 echo "Running cd-hit on ncRNAs..."
@@ -131,15 +141,16 @@ cd-hit-est -i $outDir/Intermediate-files/ncRNAs_relative.fa -o $outDir/Intermedi
 
 ### Combine the tRNA and ncRNA FASTAs
 echo "Combining ncRNA and tRNA FASTA files..."
-cat $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa $outDir/Intermediate-files/tRNA_intermediate.fa > $outDir/"${species}_tRNAs-and-ncRNAs_relative.fa" &
+cat $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa $outDir/Intermediate-files/All-tRNAs_intermediate.fa > $outDir/"${species}_tRNAs-and-ncRNAs_relative.fa" &
 
 ### Run Reduce-GTF - This removes multiple GTF lines referring to the same feature
 echo "Removing GTF duplicates..."
 python bin/Reduce-GTF.py $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa $outDir/Intermediate-files/ncRNAs_relative.gtf $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" & 
-python bin/Reduce-GTF.py $outDir/Intermediate-files/tRNA_intermediate.fa $outDir/Intermediate-files/tRNA_intermediate_relative.gtf $outDir/"${species}_tRNAs_relative.gtf" &
+python bin/Reduce-GTF.py $outDir/Intermediate-files/All-tRNAs_intermediate.fa $outDir/Intermediate-files/All-tRNAs_intermediate_relative.gtf $outDir/"${species}_tRNAs_relative.gtf" &
 
 wait
 
+### Change "gene_type" to "gene_biotype" for consistency 
 sed 's/gene_type/gene_biotype/g' $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" > $outDir/"${species}_ncRNAs_relative_cdhit.gtf" & # Make sure ncRNA type is defined using gene_biotype
 
 ### Find tRNA introns for removal
@@ -168,7 +179,7 @@ python bin/tRNA-lengths.py $outDir/"${species}_tRNAs_relative.gtf" $outDir/"${sp
 echo "ncRNAs in input: "$(grep -c '>' $outDir/Intermediate-files/ncRNAs_relative.fa)
 echo "ncRNAs in output: "$(grep -c '>' $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa)
 echo "tRNAs in input: "$(grep -c '>' $in_tRNAs)
-echo "tRNAs in output: "$(grep -c '>' $outDir/Intermediate-files/tRNA_intermediate.fa)
+echo "tRNAs (including mitochondrial tRNAs) in output: "$(grep -c '>' $outDir/Intermediate-files/tRNA_intermediate.fa)
 
 echo "Finished"
 
