@@ -11,7 +11,7 @@ How to use
 # Download the genome and GTF of the species you are interested in, and a tRNA FASTA file:
 wget -q http://ftp.ensembl.org/pub/release-95/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz .
 wget -q http://ftp.ensembl.org/pub/release-95/gtf/mus_musculus/Mus_musculus.GRCm38.95.gtf.gz .
-wget -q http://gtrnadb.ucsc.edu/genomes/eukaryota/Mmusc10/mm10-tRNAs.fa .
+wget -q http://gtrnadb.ucsc.edu/genomes/eukaryota/Mmusc10/tRNAs.fa .
 
 # Gunzip files
 gunzip *.gz
@@ -19,13 +19,13 @@ gunzip *.gz
 pigz -p 5 *.gz
 
 # Run as follows:
-Usage: $0 -s mouse -f mm10-tRNAs.fa -A Mus_musculus.GRCm38.95.gtf -F Mus_musculus.GRCm38.dna.primary_assembly.fa -o OutputDirectory
+Usage: $0 -s ${species} -f tRNAs.fa -A Mus_musculus.GRCm38.95.gtf -F Mus_musculus.GRCm38.dna.primary_assembly.fa -o OutputDirectory
 " 1>&2; }
 info() { echo "
 Options
 
 	-h	Print the usage and options information
-	-s	Species (e.g. mouse)
+	-s	Species (e.g. ${species})
 	-f	FASTA file of tRNAs for new species
 	-A	Full GTF file for new species
 	-F	Full FASTA file containing genome of new species 
@@ -84,6 +84,8 @@ ncRNA_newname_FA="${ncRNA_basename}_relative.fa"
 ncRNA_newname_GTF="${ncRNA_basename}_relative.gtf"
 genome_basename="$(basename -- $in_genome)"
 
+if false; then
+
 echo "Extracting features from GTF..."
 ### Get ncRNAs from GTF file
 grep \
@@ -101,6 +103,10 @@ grep \
 grep Mt_tRNA \
 	$in_ncRNAs_GTF \
 	> $outDir/Intermediate-files/Mt_tRNAs.gtf
+cat \
+	$outDir/Intermediate-files/ncRNAs.gtf \
+	$outDir/Intermediate-files/Mt_tRNAs.gtf \
+	> $outDir/Intermediate-files/All-ncRNA_absolute-coordinates.gtf
 
 ### Get intron coordinates from .ss file
 #grep -Ev ^'HMM|Seq:|Str:|    ' $in_tRNAs_ss \
@@ -145,8 +151,8 @@ cat $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa $outDir/Intermediate-fil
 
 ### Run Reduce-GTF - This removes multiple GTF lines referring to the same feature
 echo "Removing GTF duplicates..."
-python bin/Reduce-GTF.py $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa $outDir/Intermediate-files/ncRNAs_relative.gtf $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" & 
-python bin/Reduce-GTF.py $outDir/Intermediate-files/All-tRNAs_intermediate.fa $outDir/Intermediate-files/All-tRNAs_intermediate_relative.gtf $outDir/"${species}_tRNAs_relative.gtf" &
+python bin/Reduce-GTF-v2.py $outDir/Intermediate-files/ncRNAs_relative_cdhit.fa $outDir/Intermediate-files/ncRNAs_relative.gtf $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" & 
+python bin/Reduce-GTF-v2.py $outDir/Intermediate-files/All-tRNAs_intermediate.fa $outDir/Intermediate-files/All-tRNAs_intermediate_relative.gtf $outDir/"${species}_tRNAs_relative.gtf" &
 
 wait
 
@@ -181,5 +187,48 @@ echo "ncRNAs in output: "$(grep -c '>' $outDir/Intermediate-files/ncRNAs_relativ
 echo "tRNAs in input: "$(grep -c '>' $in_tRNAs)
 echo "tRNAs (including mitochondrial tRNAs) in output: "$(grep -c '>' $outDir/Intermediate-files/tRNA_intermediate.fa)
 
-echo "Finished"
 
+##### Add lookalikes to final FASTA file and GTF #####
+echo "=====Adding ncRNA/tRNA lookalikes to FASTA file====="
+### Compare tRNAs to genome
+echo "Comparing tRNAs to genome..."
+mmseqs easy-search --min-aln-len 15 --search-type 3 ${in_tRNAs} ${in_genome} $outDir/Intermediate-files/mmseqs_tRNAs_vs_${species}-genome.m8 tmpdir
+
+### Get top hits for above comparison (alignment over 65 nt and identity = 100%)
+echo "Getting top hits..."
+awk '$3 == "1.000" {print $0}' $outDir/Intermediate-files/mmseqs_tRNAs_vs_${species}-genome.m8 | awk '$4 > 65 {print $0}' | sort -k1,1n > $outDir/Intermediate-files/mmseqs_tRNAs_vs_${species}-genome_top-hits.m8 
+
+### Pull chromosome, start and stop coordinates from the top tRNA-vs-genome hits
+echo "Extracting top hit coordinates..."
+awk '{print $2"\t"$9"\t"$10}' $outDir/Intermediate-files/mmseqs_tRNAs_vs_${species}-genome_top-hits.m8 | sort -k1,1n | uniq > $outDir/Intermediate-files/Chrom_start_stop.tsv 
+
+### Create genome FASTA masking tRNA top hits and all ncRNAs from GTF (i.e. replace all ncRNAs with NNNs in genome)
+echo "Replace tRNAs/ncRNAs in genome with ambiguous nucleotides (NNNs)"
+python bin/GTF-to-FASTA_EverythingButGTF-v3.py $outDir/Intermediate-files/Chrom_start_stop.tsv $outDir/Intermediate-files/All-ncRNA_absolute-coordinates.gtf $in_genome $outDir/Intermediate-files/${species}_genome_no-ncRNAs.fa 
+
+fi
+
+### Compare tRNAs + ncRNAs against masked genome (i.e. genome excluding all perfect matches to ncRNAs)
+### The aim here is to generate a list of ncRNA lookalike
+echo "Compare ncRNAs/tRNAs to masked genome..."
+mmseqs easy-search --search-type 3 $outDir/${species}_tRNAs-and-ncRNAs_relative.fa $outDir/Intermediate-files/${species}_genome_no-ncRNAs.fa $outDir/Intermediate-files/Lookalikes.m8 tmp 
+
+### Convert lookalikes to FASTA sequence and create accompanying GTF
+echo "Generate FASTA sequences of lookalikes..."
+python2 bin/M8-to-FASTA.py $outDir/Intermediate-files/Lookalikes.m8 $outDir/Intermediate-files/${species}_genome_no-ncRNAs.fa $outDir/Intermediate-files/Lookalikes.fa $outDir/Intermediate-files/Lookalikes.gtf 
+
+### Remove redundant sequences in lookalikes FASTA
+echo "Remove redundant sequences from lookalikes..."
+cd-hit-est -i $outDir/Intermediate-files/Lookalikes.fa -o $outDir/Intermediate-files/Lookalikes_cdhit.fa -c 0.995 
+
+### Reduce GTF to match new reduced FASTA
+echo "Reduce lookalike GTF to match reduced lookalike FASTA..."
+python bin/Reduce-GTF-v2.py $outDir/Intermediate-files/Lookalikes_cdhit.fa $outDir/Intermediate-files/Lookalikes.gtf $outDir/Intermediate-files/Lookalikes_cdhit.gtf 
+
+### Combine lookalikes with regular FASTA
+echo "Combined ncRNA/tRNA lookalikes with genuine ncRNA/tRNA FASTA"
+cat $outDir/"${species}_tRNAs-and-ncRNAs_relative.fa" \
+	$outDir/Intermediate-files/Lookalikes_cdhit.fa \
+	> $outDir/"${species}_tRNAs-and-ncRNAs-and-lookalikes_relative.fa"
+
+echo "Finished"
