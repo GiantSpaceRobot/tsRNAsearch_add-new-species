@@ -84,8 +84,6 @@ ncRNA_newname_FA="${ncRNA_basename}_relative.fa"
 ncRNA_newname_GTF="${ncRNA_basename}_relative.gtf"
 genome_basename="$(basename -- $in_genome)"
 
-if false; then
-
 echo "Extracting features from GTF..."
 ### Get ncRNAs from GTF file
 grep \
@@ -205,8 +203,6 @@ awk '{print $2"\t"$9"\t"$10}' $outDir/Intermediate-files/mmseqs_tRNAs_vs_${speci
 ### Create genome FASTA masking tRNA top hits and all ncRNAs from GTF (i.e. replace all ncRNAs with NNNs in genome)
 echo "Replace tRNAs/ncRNAs in genome with ambiguous nucleotides (NNNs)"
 python bin/GTF-to-FASTA_EverythingButGTF-v3.py $outDir/Intermediate-files/Chrom_start_stop.tsv $outDir/Intermediate-files/All-ncRNA_absolute-coordinates.gtf $in_genome $outDir/Intermediate-files/${species}_genome_no-ncRNAs.fa 
-
-fi
 
 ### Compare tRNAs + ncRNAs against masked genome (i.e. genome excluding all perfect matches to ncRNAs)
 ### The aim here is to generate a list of ncRNA lookalike
