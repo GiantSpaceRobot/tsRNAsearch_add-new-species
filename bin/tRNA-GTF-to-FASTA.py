@@ -50,7 +50,12 @@ for line in readlines:
                 #geneDescription = 'gene_id "' + geneName + '"' + " ".join(splitline[8].split('"', 2)[2:]) # Replace gene_id with new one
                 geneDescription = 'gene_id "' + geneName + '"; gene_version "1"; gene_name "' + geneName + '"; gene_source "insdc"; gene_biotype "Mt_tRNA";' # Replace gene_id with new one
             geneid_set.add(featureID[1])
-            chromosome = genomeSeqIOdict[splitline[0]].id
+            try:
+                chromosome = genomeSeqIOdict[splitline[0]].id
+            except: # If chromosome name from GTF not in genome file, skip. 
+                print("WARNING: Couldn't find Chromosome %s in genome file, skipping the following feature..." % splitline[0])
+                print(splitline)
+                continue 
             chromosomeLen = len(genomeSeqIOdict[splitline[0]].seq)
             left_coord = int(splitline[3]) - 50 # -50 to get 50 nt upsteam
             right_coord = int(splitline[4]) + 50 # +50 to get 50 nt downstream

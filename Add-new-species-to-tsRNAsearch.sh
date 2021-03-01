@@ -19,7 +19,7 @@ gunzip *.gz
 pigz -p 5 *.gz
 
 # Run as follows:
-Usage: $0 -s ${species} -f tRNAs.fa -A Mus_musculus.GRCm38.95.gtf -F Mus_musculus.GRCm38.dna.primary_assembly.fa -o OutputDirectory
+Usage: $0 -s mouse -f tRNAs.fa -A Mus_musculus.GRCm38.95.gtf -F Mus_musculus.GRCm38.dna.primary_assembly.fa -o OutputDirectory
 " 1>&2; }
 info() { echo "
 Options
@@ -155,7 +155,9 @@ python bin/Reduce-GTF-v2.py $outDir/Intermediate-files/All-tRNAs_intermediate.fa
 wait
 
 ### Change "gene_type" to "gene_biotype" for consistency 
-sed 's/gene_type/gene_biotype/g' $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" > $outDir/"${species}_ncRNAs_relative_cdhit.gtf" & # Make sure ncRNA type is defined using gene_biotype
+sed 's/gene_type/gene_biotype/g' $outDir/Intermediate-files/"${species}_ncRNAs_relative_cdhit.gtf" \
+	| sed 's/\tgene\t/\texon\t/g' \
+	> $outDir/"${species}_ncRNAs_relative_cdhit.gtf" & # Make sure ncRNA type is defined using gene_biotype
 
 ### Find tRNA introns for removal
 #awk '{print $1}' $outDir/"${species}_tRNAs_relative_cdhit.gtf" | uniq -d > $outDir/Intermediate-files/"${species}_tRNAs-with-introns.txt"
@@ -167,12 +169,12 @@ echo "Gathering all ncRNA and tRNA names..."
 grep '>' $outDir/"${species}_tRNAs-and-ncRNAs_relative.fa" | \
 	sed 's/>//g' | \
 	awk -F ' ' '{print $1}' \
-	> $outDir/"${species}_all-ncRNAs.txt"
+	> $outDir/Intermediate-files/"${species}_all-ncRNAs.txt"
 
 
 ### Create empty count files
 echo "Creating empty count files..."
-sed 's/$/\t0/' $outDir/"${species}_all-ncRNAs.txt" > $outDir/Intermediate-files/"${species}_all-ncRNAs.count" # Add tab and 0 after every ncRNA
+sed 's/$/\t0/' $outDir/Intermediate-files/"${species}_all-ncRNAs.txt" > $outDir/Intermediate-files/"${species}_all-ncRNAs.count" # Add tab and 0 after every ncRNA
 grep -i tRNA $outDir/Intermediate-files/"${species}_all-ncRNAs.count" > $outDir/"${species}_empty_tRNA.count" # Get tRNA count file
 grep -iv tRNA $outDir/Intermediate-files/"${species}_all-ncRNAs.count" > $outDir/"${species}_empty_ncRNA.count" # Get ncRNA count file
 
@@ -225,6 +227,6 @@ python bin/Reduce-GTF-v2.py $outDir/Intermediate-files/Lookalikes_cdhit.fa $outD
 echo "Combined ncRNA/tRNA lookalikes with genuine ncRNA/tRNA FASTA"
 cat $outDir/"${species}_tRNAs-and-ncRNAs_relative.fa" \
 	$outDir/Intermediate-files/Lookalikes_cdhit.fa \
-	> $outDir/"${species}_tRNAs-and-ncRNAs-and-lookalikes_relative.fa"
+	> $outDir/"${species}_tRNAs-and-ncRNAs-and-lookalikes.fa"
 
 echo "Finished"
